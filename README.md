@@ -1,4 +1,18 @@
-# my-app
+### A Dockerized API that serves a model
+`#0969DA`
+# What we are developing ?
+
+Backend API: FastAPI
+
+Model: A simple ML model (e.g., sklearn)
+
+Database : postgres:15
+
+Containerization:
+
+Dockerfile (required)
+
+Docker Compose
 
 Install python 3 and pip
 sudo apt install python3 python3-pip -y
