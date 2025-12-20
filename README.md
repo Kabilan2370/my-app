@@ -1,4 +1,4 @@
-**# A Dockerized API that serves a model**
+# ** A Dockerized API that serves a model**
 `#0969DA`
 ### What we are developing ?
 
