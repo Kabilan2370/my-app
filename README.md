@@ -1,6 +1,6 @@
-### A Dockerized API that serves a model
+**# A Dockerized API that serves a model**
 `#0969DA`
-# What we are developing ?
+### What we are developing ?
 
 Backend API: FastAPI
 
@@ -14,7 +14,7 @@ Dockerfile (required)
 
 Docker Compose
 
-Install python 3 and pip
+### 1. Install python 3 and pip
 sudo apt install python3 python3-pip -y
 
 Create a virtual environment
@@ -24,128 +24,129 @@ source myenv/bin/activate
 Install neccessary dependies using pip
 pip install fastapi uvicorn scikit-learn pandas
 
-Create a file name as model.py add below these lines
+### 2. Create a file name as model.py add below these lines
 
-from sklearn.dummy import DummyClassifier
-import pickle
+        from sklearn.dummy import DummyClassifier
+        import pickle
+        
+        # Create a dummy model
+        X_train = [[0], [1], [2], [3]]
+        y_train = [0, 1, 1, 0]
+        
+        model = DummyClassifier(strategy="most_frequent")
+        model.fit(X_train, y_train)
+        
+        # Save the model
+        with open("model.pkl", "wb") as f:
+            pickle.dump(model, f)
+   
 
-# Create a dummy model
-X_train = [[0], [1], [2], [3]]
-y_train = [0, 1, 1, 0]
-
-model = DummyClassifier(strategy="most_frequent")
-model.fit(X_train, y_train)
-
-# Save the model
-with open("model.pkl", "wb") as f:
-    pickle.dump(model, f)
-
-Once you create the model.py file, Run the below command it will give the model.pkl file
+### 3. Once you create the model.py file, Run the below command it will give the model.pkl file
 python3 model.py
-
 For FastAPI app create a app.py file
 
-# app.py
-from fastapi import FastAPI
-import pickle
+        # app.py
+        from fastapi import FastAPI
+        import pickle
+        
+        app = FastAPI()
+        
+        # Load the model
+        with open("model.pkl", "rb") as f:
+            model = pickle.load(f)
+        
+        @app.get("/")
+        def read_root():
+            return {"message": "Hello! ML API is running."}
+        
+        @app.get("/predict")
+        def predict(x: int):
+            prediction = model.predict([[x]])
+            return {"input": x, "prediction": int(prediction[0])}
+   
 
-app = FastAPI()
+### 4. Once created these file, Using unicorn to start the application
 
-# Load the model
-with open("model.pkl", "rb") as f:
-    model = pickle.load(f)
+           uvicorn app:app --reload
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello! ML API is running."}
+### 5. Install the docker engine 
 
-@app.get("/predict")
-def predict(x: int):
-    prediction = model.predict([[x]])
-    return {"input": x, "prediction": int(prediction[0])}
+       sudo apt update
+       sudo apt install docker-ce docker-ce-cli containerd.io -y
 
-Once created these file, Using unicorn to start the application
-
-uvicorn app:app --reload
-
-Install the docker engine 
-
-sudo apt update
-sudo apt install docker-ce docker-ce-cli containerd.io -y
-
-Create a Dockerfile to create a docker image
-
-Before create a Dockerfile create another requirements.txt
+### 6. Create a Dockerfile to create a docker image, Before create a Dockerfile create another requirements.txt
 this file should contain
 
-fastapi
-uvicorn[standard]
-scikit-learn
-pandas
+        fastapi
+        uvicorn[standard]
+        scikit-learn
+        pandas
 
-This is the Dockerfile
+### 7. Create a Dockerfile
 
-# Use official Python slim image for smaller size
-FROM python:3.11-slim
+        # Use official Python slim image
+        FROM python:3.11-slim
+        
+        # Set working directory
+        WORKDIR /app
+        
+        # Copy only requirements
+        COPY requirements.txt .
+        
+        # Install dependencies
+        RUN pip install --no-cache-dir -r requirements.txt
+        
+        # Copy the codes
+        COPY . .
+        
+        # Expose port
+        EXPOSE 8000
+        
+        # Command to run the API
+        CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
-# Set working directory
-WORKDIR /app
+### 8. Build the docker image using this Dockerfile
 
-# Copy only requirements
-COPY requirements.txt .
+        sudo docker build -t api-ml .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+### 9. Now create a docker container using this What we created docker image
 
-# Copy the codes
-COPY . .
+        sudo docker run -d --name api-app -p 8000:8000 api-ml(image-name)
 
-# Expose port
-EXPOSE 8000
+We can check the status using the url
 
-# Command to run the API
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+* http://public-ip/  = We can see the API
+* http://public-ip:8000/docs  = We can see the interactive Swagger docs
 
-Build the docker image using this Dockerfile
+### 10. Once you done with this image upload this image on your dockerhub, This is my docker image stored on dockerhub
+        sudo docker pull kabilan2003/api-ml:latest
 
-sudo docker build -t api-ml .
-
-Now create a docker container using this What we created docker image
-
-sudo docker run -d --name api-app -p 8000:8000 api-ml(image-name)
-
-http://public-ip/  = We can see the API
-http://public-ip:8000/docs  = We can see the interactive Swagger docs
-
-Once you done with this image upload this image on your dockerhub, This is my docker image stored on dockerhub
-sudo docker pull kabilan2003/api-ml:latest
-
-To Launch a multiple docker container use the docker compose file. Here I'm going to use the postgres for database.
+### 11. To Launch a multiple docker container use the docker compose file. Here I'm going to use the postgres for database.
 So, pull the postgres:15 image from dockerhub
 
-Create a docker-compose.yml file
+**Create a docker-compose.yml file**
 
-version: "3.9"
+        version: "3.9"
+        
+        services:
+          api:
+            build: .
+            ports:
+              - "8000:8000"
+            depends_on:
+              - db
+        
+          db:
+            image: postgres:15
+            environment:
+              POSTGRES_USER: kabilan
+              POSTGRES_PASSWORD: kabilan123
+              POSTGRES_DB: mydb
+            ports:
+              - "5432:5432"
 
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+### 12. The finlly buiild the docker-compose file
+        sudo docker-compose up --build
 
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: kabilan
-      POSTGRES_PASSWORD: kabilan123
-      POSTGRES_DB: mydb
-    ports:
-      - "5432:5432"
-
-The finlly buiild the docker-compose file
-sudo docker-compose up --build
-
-For public url access any cloud ec2 machine, Here I used AWS EC2 machine.
+### 13. For public url access any cloud ec2 machine, Here I used AWS EC2 machine.
 then pulled the images from my dockerhub what I build before.
