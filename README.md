@@ -1,53 +1,34 @@
 # **Blue/Green Deployment for Strapi on AWS**
 
 ### What we are developing ?
-
-Backend API: FastAPI
-
-Model: A simple ML model (e.g., sklearn)
-
-Database : postgres:15
-
-Containerization:
-
-Dockerfile (required)
-
-Docker Compose
+A placeholder is something temporary that exists only so the infrastructure can be created successfully — it is not the final or real value.
+Here I used the placeholder nginx:latest image 
 
 ### 1. Create ECS Cluster
 
-Create an ECS Cluster with:
-
-Launch type: Fargate
+Create an ECS Cluster with Fargate
 
 
 ### 2. I have created 2 Security Groups
 
-ALB Security Group
+1. ALB Security Group
 
 Allow inbound traffic from the internet:
 
-HTTP → Port 80
+HTTP → Port 80   HTTPS → Port 443
 
-HTTPS → Port 443
-
-Source: 0.0.0.0/0
-
-Allow all outbound traffic.
-
-ECS Service Security Group
+2. ECS Service Security Group
 
 Allow inbound traffic only from ALB:
 
 Port: 1337
 
 Source: ALB Security Group
-
    
 
 ### 3. Create Application Load Balancer (ALB)
 
-Create an Application Load Balancer with 2 different target groups aattached with this
+Created an Application Load Balancer with 2 different target groups aattached with this
 
 1. Bule target group
 2. Green target group
@@ -67,13 +48,12 @@ During deployments, CodeDeploy will automatically shift traffic between Blue ↔
 
 ### 5. Create ECS Task Definition (Placeholder)
 
-Define a Task Definition with:
 
-Create a Task definition with Fargate and default vpc and subnet.
+Created a Task definition with Fargate and default vpc and subnet.
 
 Container:
 
-Image: placeholder image
+Image: nginx:latest placeholder image
 
 Container port: 1337
 
@@ -94,7 +74,7 @@ Assign : ECS Security Group
 
 ### 7. Create AWS CodeDeploy Application
 
-Create a CodeDeploy Application choose the Compute platform as ECS
+Created a CodeDeploy Application choose the Compute platform as ECS
 
 ### 8. Create CodeDeploy Deployment Group
 
