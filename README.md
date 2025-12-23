@@ -32,7 +32,20 @@ Created an Application Load Balancer with 2 different target groups aattached wi
 
 1. Bule target group
 2. Green target group
-   
+
+### What is the usage of creating multiple target groups ?
+Creating multiple target groups allows for complex traffic routing, such as directing different request types or traffic from internal/external sources to specific backends.
+
+### Suppose you have:
+
+/api → Strapi
+
+/admin → Admin panel
+
+/static → Static site
+
+You can create one ALB and three target groups
+
 
 ### 4. Configure ALB Listeners
 Listener on Port 80 (HTTP)
