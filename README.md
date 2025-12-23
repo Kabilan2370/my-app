@@ -1,5 +1,5 @@
-# ** A Dockerized API that serves a model**
-`#0969DA`
+# **Blue/Green Deployment for Strapi on AWS**
+
 ### What we are developing ?
 
 Backend API: FastAPI
@@ -14,139 +14,96 @@ Dockerfile (required)
 
 Docker Compose
 
-### 1. Install python 3 and pip
-sudo apt install python3 python3-pip -y
+### 1. Create ECS Cluster
 
-Create a virtual environment
-python3 -m venv myenv
-source myenv/bin/activate
+Create an ECS Cluster with:
 
-Install neccessary dependies using pip
-pip install fastapi uvicorn scikit-learn pandas
+Launch type: Fargate
 
-### 2. Create a file name as model.py add below these lines
 
-        from sklearn.dummy import DummyClassifier
-        import pickle
-        
-        # Create a dummy model
-        X_train = [[0], [1], [2], [3]]
-        y_train = [0, 1, 1, 0]
-        
-        model = DummyClassifier(strategy="most_frequent")
-        model.fit(X_train, y_train)
-        
-        # Save the model
-        with open("model.pkl", "wb") as f:
-            pickle.dump(model, f)
+### 2. I have created 2 Security Groups
+
+ALB Security Group
+
+Allow inbound traffic from the internet:
+
+HTTP → Port 80
+
+HTTPS → Port 443
+
+Source: 0.0.0.0/0
+
+Allow all outbound traffic.
+
+ECS Service Security Group
+
+Allow inbound traffic only from ALB:
+
+Port: 1337
+
+Source: ALB Security Group
+
    
 
-### 3. Once you create the model.py file, Run the below command it will give the model.pkl file
-python3 model.py
-For FastAPI app create a app.py file
+### 3. Create Application Load Balancer (ALB)
 
-        # app.py
-        from fastapi import FastAPI
-        import pickle
-        
-        app = FastAPI()
-        
-        # Load the model
-        with open("model.pkl", "rb") as f:
-            model = pickle.load(f)
-        
-        @app.get("/")
-        def read_root():
-            return {"message": "Hello! ML API is running."}
-        
-        @app.get("/predict")
-        def predict(x: int):
-            prediction = model.predict([[x]])
-            return {"input": x, "prediction": int(prediction[0])}
+Create an Application Load Balancer with 2 different target groups aattached with this
+
+1. Bule target group
+2. Green target group
    
 
-### 4. Once created these file, Using unicorn to start the application
+### 4. Configure ALB Listeners
+Listener on Port 80 (HTTP)
 
-           uvicorn app:app --reload
+Default action → Forward traffic to Blue Target Group
 
-### 5. Install the docker engine 
+Listener on Port 443
 
-       sudo apt update
-       sudo apt install docker-ce docker-ce-cli containerd.io -y
+Default action → Forward traffic to Blue Target Group
 
-### 6. Create a Dockerfile to create a docker image, Before create a Dockerfile create another requirements.txt
-this file should contain
+During deployments, CodeDeploy will automatically shift traffic between Blue ↔ Green target groups.
 
-        fastapi
-        uvicorn[standard]
-        scikit-learn
-        pandas
 
-### 7. Create a Dockerfile
+### 5. Create ECS Task Definition (Placeholder)
 
-        # Use official Python slim image
-        FROM python:3.11-slim
-        
-        # Set working directory
-        WORKDIR /app
-        
-        # Copy only requirements
-        COPY requirements.txt .
-        
-        # Install dependencies
-        RUN pip install --no-cache-dir -r requirements.txt
-        
-        # Copy the codes
-        COPY . .
-        
-        # Expose port
-        EXPOSE 8000
-        
-        # Command to run the API
-        CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+Define a Task Definition with:
 
-### 8. Build the docker image using this Dockerfile
+Create a Task definition with Fargate and default vpc and subnet.
 
-        sudo docker build -t api-ml .
+Container:
 
-### 9. Now create a docker container using this What we created docker image
+Image: placeholder image
 
-        sudo docker run -d --name api-app -p 8000:8000 api-ml(image-name)
+Container port: 1337
 
-We can check the status using the url
+This task definition will be dynamically updated by CI/CD.
 
-* http://public-ip/  = We can see the API
-* http://public-ip:8000/docs  = We can see the interactive Swagger docs
 
-### 10. Once you done with this image upload this image on your dockerhub, This is my docker image stored on dockerhub
-        sudo docker pull kabilan2003/api-ml:latest
+### 6. Create ECS Service (Blue/Green Enabled)
 
-### 11. To Launch a multiple docker container use the docker compose file. Here I'm going to use the postgres for database.
-So, pull the postgres:15 image from dockerhub
+Create ECS Service with Fargate
 
-**Create a docker-compose.yml file**
+Deployment controller: CODE_DEPLOY
 
-        version: "3.9"
-        
-        services:
-          api:
-            build: .
-            ports:
-              - "8000:8000"
-            depends_on:
-              - db
-        
-          db:
-            image: postgres:15
-            environment:
-              POSTGRES_USER: kabilan
-              POSTGRES_PASSWORD: kabilan123
-              POSTGRES_DB: mydb
-            ports:
-              - "5432:5432"
+Attach:
 
-### 12. The finlly buiild the docker-compose file
-        sudo docker-compose up --build
+ALB attached with Blue and green Target Group
 
-### 13. For public url access any cloud ec2 machine, Here I used AWS EC2 machine.
-then pulled the images from my dockerhub what I build before.
+Assign : ECS Security Group
+
+### 7. Create AWS CodeDeploy Application
+
+Create a CodeDeploy Application choose the Compute platform as ECS
+
+### 8. Create CodeDeploy Deployment Group
+
+Configure Deployment Group with:
+
+⚙️ Deployment Settings
+
+Deployment type: Blue/Green
+
+Traffic control: ALB
+
+Deployment strategy: CodeDeployDefault.ECSCanary10Percent5Minutes
