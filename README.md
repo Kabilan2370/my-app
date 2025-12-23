@@ -4,6 +4,9 @@
 A placeholder is something temporary that exists only so the infrastructure can be created successfully — it is not the final or real value.
 Here I used the placeholder nginx:latest image 
 
+### What is placeholder ?
+Placeholder = temporary container used only Later, Before your real CI/CD pipeline pushes your custom Strapi image, codeDeploy replaces it with your real app image. There is no difference between the strapi image vs placeholder strapi image.
+
 ### 1. Create ECS Cluster
 
 Create an ECS Cluster with Fargate
