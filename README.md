@@ -1,105 +1,75 @@
-# **Blue/Green Deployment for Strapi on AWS**
+## **Amazon ECS (Elastic Container Service)**
 
-### What we are developing ?
-A placeholder is something temporary that exists only so the infrastructure can be created successfully — it is not the final or real value.
-Here I used the placeholder nginx:latest image 
+### What is ECS (Elastic Container Service) ?
+Amazon Elastic Container Service (ECS) is a fully managed AWS service that helps you easily run, stop, and manage Docker containers, acting as an orchestration tool to deploy, scale, and manage containerized apps without the headache of managing the underlying infrastructure yourself, offering Fargate (serverless) or EC2 (self-managed) launch types for flexibility.
 
-### What is placeholder ?
-Placeholder = temporary container used only Later, Before your real CI/CD pipeline pushes your custom Strapi image, codeDeploy replaces it with your real app image. There is no difference between the strapi image vs placeholder strapi image.
+### When to Use ECS ?
+when you need to run containerized apps on AWS, especially for web apps, microservices, batch jobs, or ML inference, preferring deep AWS integration (IAM, ALB) and simpler management (Fargate) over full Kubernetes complexity, or if you need control over EC2 instances for specific hardware/compliance
 
-### 1. Create ECS Cluster
+### Core ECS Components :
+The core are Cluster, Service, Task Definition, and Task, managing containerized apps
 
-Create an ECS Cluster with Fargate
+**1. Cluster :** A logical grouping of resources ( EC2 instance or Fargate ) where tasks run.
 
-
-### 2. I have created 2 Security Groups
-
-1. ALB Security Group
-
-Allow inbound traffic from the internet:
-
-HTTP → Port 80   HTTPS → Port 443
-
-2. ECS Service Security Group
-
-Allow inbound traffic only from ALB:
-
-Port: 1337
-
-Source: ALB Security Group
+   **1. EC2 instances (EC2 launch type) :** when you need a high degree of control over the underlying infrastructure, require specific instance types, have custom security or networking requirements, or need to optimize costs through specific pricing models like Spot Instances or Reserved Instances
    
+   **2. Fargate capacity (serverless) :** Use AWS Fargate with ECS (Elastic Container Service) for serverless container orchestration when you need to focus on code, not servers, ideal for microservices, APIs, batch jobs, and event-driven apps, especially with unpredictable traffic or short-lived tasks.
 
-### 3. Create Application Load Balancer (ALB)
+**2. Task Definition :** A blueprint describing one or more containers, their images, CPU/memory, ports, and environment variables.
 
-Created an Application Load Balancer with 2 different target groups aattached with this
+**3. Task :** A running instance of a task definition the smallest unit of execution.
 
-1. Bule target group
-2. Green target group
+**4. Service :** Maintains a desired count of tasks, handles scaling, load balancing and rolling updates for high availability. 
 
-### What is the usage of creating multiple target groups ?
-Creating multiple target groups allows for complex traffic routing, such as directing different request types or traffic from internal/external sources to specific backends.
+### ECS Deployment Types
+Amazon ECS offers three main deployment types via Deployment Controllers
 
-### Suppose you have:
+**1. Rolling Update (Default) :** ECS replaces old tasks with new ones incrementally, controlled by minimumHealthyPercent and maximumPercent parameters.
 
-/api → Strapi
+**2. CodeDeploy Blue/Green (CodeDeploy Controller) :** Creates a new "green" environment alongside the old "blue" environment, shifts a small amount of traffic, verifies, then shifts all traffic, allowing for automatic rollbacks.
 
-/admin → Admin panel
+**3. External (External Controller) :** Gives you full control to use custom scripts, Terraform or other CI/CD tools (like Jenkins, GitLab) to manage the deployment lifecycle.
 
-/static → Static site
+### Manual Deployment Process Overview
+While a production environment typically uses CI/CD services (like AWS CodePipeline, CodeDeploy, or GitHub Actions), a manual deployment through the AWS Console or CLI generally involves these steps:
 
-You can create one ALB and three target groups
+**1.Prepare the Container Image :**
+   - Create a Docker image for your application.
+
+   - Push the image to a container registry like Amazon ECR.
+
+**2. Create the ECS Cluster :**
+   - Go to the ECS console and create a new cluster.
+
+   - Choose the Capacity/Launch Type: Select either Fargate (Serverless) or EC2 (if you choose EC2, you will also need to configure the Auto Scaling Group for the cluster instances).
+
+**3. Create a Task Definition :**
+
+   - Define a new Task Definition, choosing the launch type (Fargate or EC2).
+
+   - Specify the Image URI from ECR, CPU, memory, networking, and the IAM role.
+
+**4. Create an ECS Service :**
+
+   - In the cluster, create a new Service.
+
+   - Select the Task Definition you created.
+
+   - Specify the desired number of tasks (containers) to run.
+
+   - Configure the networking (VPC, subnets, and security groups).
+
+   - Optionally, configure a Load Balancer (Application Load Balancer is common) to distribute traffic across your running tasks.
+
+**5. Run/Deploy :**
+
+   - The Service scheduler will launch the desired number of tasks on the chosen capacity (Fargate or EC2 instances).
+
+   - If using a Load Balancer, the tasks will be registered as targets, and traffic will start flowing to your application.
 
 
-### 4. Configure ALB Listeners
-Listener on Port 80 (HTTP)
-
-Default action → Forward traffic to Blue Target Group
-
-Listener on Port 443
-
-Default action → Forward traffic to Blue Target Group
-
-During deployments, CodeDeploy will automatically shift traffic between Blue ↔ Green target groups.
 
 
-### 5. Create ECS Task Definition (Placeholder)
 
 
-Created a Task definition with Fargate and default vpc and subnet.
 
-Container:
-
-Image: nginx:latest placeholder image
-
-Container port: 1337
-
-This task definition will be dynamically updated by CI/CD.
-
-
-### 6. Create ECS Service (Blue/Green Enabled)
-
-Create ECS Service with Fargate
-
-Deployment controller: CODE_DEPLOY
-
-Attach:
-
-ALB attached with Blue and green Target Group
-
-Assign : ECS Security Group
-
-### 7. Create AWS CodeDeploy Application
-
-Created a CodeDeploy Application choose the Compute platform as ECS
-
-### 8. Create CodeDeploy Deployment Group
-
-Configure Deployment Group with:
-
-⚙️ Deployment Settings
-
-Deployment type: Blue/Green
-
-Traffic control: ALB
-
-Deployment strategy: CodeDeployDefault.ECSCanary10Percent5Minutes
