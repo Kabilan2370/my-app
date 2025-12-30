@@ -11,9 +11,9 @@ The core are Cluster, Service, Task Definition, and Task, managing containerized
 
 **1. Cluster :** A logical grouping of resources ( EC2 instance or Fargate ) where tasks run.
 
-   **1. EC2 instances (EC2 launch type) :** when you need a high degree of control over the underlying infrastructure, require specific instance types, have custom security or networking requirements, or need to optimize costs through specific pricing models like Spot Instances or Reserved Instances
+   - 1. EC2 instances (EC2 launch type) : when you need a high degree of control over the underlying infrastructure, require specific instance types, have custom security or networking requirements, or need to optimize costs through specific pricing models like Spot Instances or Reserved Instances
    
-   **2. Fargate capacity (serverless) :** Use AWS Fargate with ECS (Elastic Container Service) for serverless container orchestration when you need to focus on code, not servers, ideal for microservices, APIs, batch jobs, and event-driven apps, especially with unpredictable traffic or short-lived tasks.
+   - 2. Fargate capacity (serverless) : Use AWS Fargate with ECS (Elastic Container Service) for serverless container orchestration when you need to focus on code, not servers, ideal for microservices, APIs, batch jobs, and event-driven apps, especially with unpredictable traffic or short-lived tasks.
 
 **2. Task Definition :** A blueprint describing one or more containers, their images, CPU/memory, ports, and environment variables.
 
