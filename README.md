@@ -96,6 +96,15 @@ sudo docker run -d \
   -e JWT_SECRET=myJWT \
   kabilan2003/strapicustom:3.2
 
+# Install 4GB swap file
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+# Make swap permanent
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+  
+
 
 
 
