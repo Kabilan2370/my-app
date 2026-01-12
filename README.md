@@ -69,6 +69,36 @@ While a production environment typically uses CI/CD services (like AWS CodePipel
 
 
 
+sudo docker pull kabilan2003/strapicustom:3.2
+sudo docker pull postgres:15
+sudo docker run -d \
+  --name strapi-postgres \
+  --network group-net \
+  -e POSTGRES_USER=strapi \
+  -e POSTGRES_PASSWORD=strapi123 \
+  -e POSTGRES_DB=strapi_db \
+  -v strapi-pgdata:/var/lib/postgresql/data \
+  postgres:15
+  
+sudo docker run -d \
+  --name strapi \
+  --network group-net \
+  -p 1337:1337 \
+  -e DATABASE_CLIENT=postgres \
+  -e DATABASE_HOST=strapi-postgres \
+  -e DATABASE_PORT=5432 \
+  -e DATABASE_NAME=strapi_db \
+  -e DATABASE_USERNAME=strapi \
+  -e DATABASE_PASSWORD=strapi123 \
+  -e APP_KEYS=myAppKey \
+  -e API_TOKEN_SALT=mySalt \
+  -e ADMIN_JWT_SECRET=myAdminJWT \
+  -e JWT_SECRET=myJWT \
+  kabilan2003/strapicustom:3.2
+
+
+
+
 
 
 
